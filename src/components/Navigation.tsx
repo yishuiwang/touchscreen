@@ -8,6 +8,8 @@ const Navigation = () => {
   const links = [
     { href: '/', label: '触摸轨迹' },
     { href: '/history', label: '历史记录' },
+    { href: '/train', label: '训练结果' },
+    { href: '/evaluate', label: '模型评估' },
   ]
 
   return (
