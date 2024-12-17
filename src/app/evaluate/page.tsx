@@ -14,6 +14,7 @@ export default function EvaluatePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [prediction, setPrediction] = useState<string | null>(null)
   const startTimeRef = useRef<number>(0)
+  const [showFeedback, setShowFeedback] = useState(false)
 
   // 清除画布
   const clearCanvas = () => {
@@ -99,7 +100,7 @@ export default function EvaluatePage() {
 
     try {
       // 发送到后端API
-      const response = await fetch('http://localhost:8000/api/evaluate', {
+      const response = await fetch(`http://172.20.10.10:8000/api/evaluate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +113,14 @@ export default function EvaluatePage() {
       }
 
       const result = await response.json()
-      setPrediction(result.prediction)
+      console.log('收到预测结果:', result) // 添加日志
+      
+      if (result.prediction !== undefined) {
+        setPrediction(result.prediction)
+        setShowFeedback(true)
+      } else {
+        throw new Error('无效的预测结果')
+      }
       
     } catch (error) {
       console.error('评估出错:', error)
@@ -142,6 +150,34 @@ export default function EvaluatePage() {
     return () => window.removeEventListener('resize', resizeCanvas)
   }, [])
 
+  // 添加反馈处理函数
+  const handleFeedback = async (isCorrect: boolean) => {
+    try {
+      // 向后端发送反馈数据
+      await fetch(`http://192.168.6.192:8000/api/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prediction: prediction,
+          isCorrect: isCorrect,
+          timestamp: new Date().toISOString()
+        })
+      })
+
+      // 隐藏反馈按钮
+      setShowFeedback(false)
+      // 清除预测结果
+      setPrediction(null)
+      // 清除画布
+      clearCanvas()
+      setPoints([])
+    } catch (error) {
+      console.error('反馈发送失败:', error)
+    }
+  }
+
   return (
     <div className={styles.container}>
       <h1>模型评估</h1>
@@ -156,7 +192,17 @@ export default function EvaluatePage() {
       
       {prediction && (
         <div className={styles.predictionOverlay}>
-          预测结果: {prediction}
+          <div>预测结果: {prediction === '1' ? '右手' : prediction === '0' ? '左手' : prediction}</div>
+          {showFeedback && (
+            <div className={styles.feedbackButtons}>
+              <button onClick={() => handleFeedback(true)} className={styles.correctButton}>
+                ✓ 正确
+              </button>
+              <button onClick={() => handleFeedback(false)} className={styles.incorrectButton}>
+                ✗ 错误
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -44,14 +44,45 @@
 
 .predictionOverlay {
   position: fixed;
-  top: 50%;
+  top: 120px;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   background-color: rgba(255, 255, 255, 0.9);
-  padding: 20px;
+  padding: 10px 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.feedbackButtons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.correctButton, .incorrectButton {
+  padding: 5px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.correctButton {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.incorrectButton {
+  background-color: #f44336;
+  color: white;
+}
+
+.correctButton:hover, .incorrectButton:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
 } 

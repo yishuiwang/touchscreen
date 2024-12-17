@@ -11,18 +11,26 @@ app = FastAPI()
 # 添加 CORS 中间件配置
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # 允许的前端源
+    allow_origins=[
+        # 允许所有源
+        "*",
+    ],
     allow_credentials=True,
-    allow_methods=["*"],  # 允许所有方法
-    allow_headers=["*"],  # 允许所有头部
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 # 加载最佳模型
 MODEL_DIR = Path("models")
 try:
-    with open(MODEL_DIR / "dt.joblib", "rb") as f:
+    with open(MODEL_DIR / "rf.joblib", "rb") as f:
         model = joblib.load(f)
+        print("模型加载成功")
+        print("模型类型:", type(model))
+        # 如果是 sklearn 模型，打印其类名
+        print("模型类名:", model.__class__.__name__)
 except Exception as e:
+    print(f"模型加载错误: {str(e)}")
     raise HTTPException(status_code=500, detail=f"模型加载失败: {str(e)}")
 
 class GestureData(BaseModel):
@@ -31,7 +39,7 @@ class GestureData(BaseModel):
     screenHeight: int
 
 def preprocess_gesture(gesture_data: GestureData):
-    """将手势数据转换为模型所需的特征格式"""
+    """将手势数据转换为模���所需的特征格式"""
     points = gesture_data.points
     
     # 转换点数据为numpy数组格式
@@ -97,7 +105,7 @@ def preprocess_gesture(gesture_data: GestureData):
         total_displacement,  # 总位移
         x_displacement,      # X方向位移
         y_displacement,      # Y方向位移
-        max_x,              # X方向最大位移
+        max_x,              # X方向最大位���
         max_y,              # Y方向最大位移
         mean_angle,         # 平均方向
         max_curvature,      # 最大曲率
@@ -114,22 +122,28 @@ def preprocess_gesture(gesture_data: GestureData):
 
 @app.post("/api/evaluate")
 async def evaluate_gesture(gesture_data: GestureData):
-    print(gesture_data)
+    print("接收到的手势数据:", gesture_data)
     try:
         # 预处理手势数据
         X = preprocess_gesture(gesture_data)
+        print("预处理后的特征:", X)
+        print("特征形状:", X.shape)
         
         # 进行预测
         prediction = model.predict(X)[0]
         probability = model.predict_proba(X)[0].max()
         
+        print("预测结果:", prediction)
+        print("预测概率:", probability)
+        print("预测概率分布:", model.predict_proba(X)[0])
+        
         return {
             "prediction": str(prediction),
             "probability": float(probability),
-            "model_name": "sz"
+            "model_name": "svm"
         }
     except Exception as e:
-        print(e)
+        print(f"预测过程出错: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
